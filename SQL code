@@ -140,3 +140,86 @@ from
     group by ShipCity
     having count(*)>5) as t
 
+--Выведите имена сотрудников, страны и регионы
+--У скольких сотрудников регион равен 'not defined'?
+select Region, count(Region)
+from (
+        select Country,lastname, case when Region is NULL then 'not defined' 
+                                        else Region end as Region
+        from Employees
+) as t1
+group by Region
+
+--Выведите имена, фамилии сотрудников и обращения (TitleOfCourtesy). 
+-- Если обращение Ms. или Mrs., то gender - 'women', а если обращение Mr. или Dr., посчитайте кол-во мужчин и женщин. 
+--Сколько сотрудников женского пола?
+
+select gender, count(gender)
+from (
+        select LastName,FirstName, case when TitleOfCourtesy = 'Ms.' or TitleOfCourtesy='Mrs.' then 'women'
+                                                when TitleOfCourtesy= 'Mr.' or TitleOfCourtesy= 'Dr.' then 'men' end as gender
+        from Employees) as t1
+group by gender
+
+
+--Выведите наименования продуктов и их цену.
+-- Сколько товаров в сегменте '50+'?
+select price,COUNT(*)
+from (
+        select  case when UnitPrice BETWEEN 0 and 9.99 then  '0-9.99'
+                        when UnitPrice BETWEEN 10 and 29.99 then   '10-29.99'
+                        when UnitPrice BETWEEN 30 and 49.99 then   '30-49.99'
+                        when UnitPrice > 50 then '50+' end as price
+        from Products) as t1
+group by price
+
+--Посчитайте общую выручку по всем заказам, 
+--которые были оформлены в 1996 году,значение округлите до целого числа
+
+
+select round(sum(UnitPrice*Quantity*(1-Discount)),0)
+from ORDERs as t1 inner join [Order Details] as t2 on t1.orderid= t2.orderid
+where orderdate between '1996-01-01' and '1996-12-31'
+
+select GETDATE()+0.125
+
+--Посчитайте какое количество заказов было сделано в 1997 году по кварталам. 
+--Сколько заказов было сделано в четвертом квартале?
+
+select *
+from (
+
+        select DATEPART(quarter,orderdate) as quartal, count(DATEPART(quarter,orderdate)) as amount
+        from ORDERs
+        where orderdate between '1997-01-01' and '1997-12-31'
+        group by DATEPART(quarter,orderdate)) as t1 
+
+where quartal = 4
+
+--Какое максимальное количество дней прошло с момента заказа (OrderDate) до момента доставки (ShippedDate) 
+--среди всех заказов?
+select max(DATEDIFF(day,orderdate,shippeddate))
+from orders
+
+--Какое количество названий стран клиентов состоят более чем из 10 символов?
+select country,count(am) as cccc
+from (
+        select country,len(country) as am
+        from Customers
+        where len(country)> 10) as t1
+group by country
+
+
+--Какой грузоотправитель исполнил больше всего заказов?
+select t2.CompanyName,count(t1.orderid)
+        from orders as t1 inner join Shippers as t2 on t1.shipvia = t2.shipperid
+        group by t2.CompanyName
+
+--Как зовут клиента с наибольшим кол-вом заказов?
+select t2.contactname, count(t1.CustomerID) as amount
+        from orders as t1 inner join Customers as t2 on t1.CustomerID = t2.CustomerID 
+        
+        group by t2.Contactname
+        order by count(t1.CustomerID) desc
+
+
